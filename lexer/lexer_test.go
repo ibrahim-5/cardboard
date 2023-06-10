@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"cardboard/token"
+	"cardboard/lexer/token"
 	"testing"
 )
 

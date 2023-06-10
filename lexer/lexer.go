@@ -1,6 +1,6 @@
 package lexer
 
-import "cardboard/token"
+import "cardboard/lexer/token"
 
 type Lexer struct {
 	data    string
