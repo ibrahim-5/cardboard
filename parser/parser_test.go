@@ -37,7 +37,7 @@ func TestPutStatementParsing1(t *testing.T) {
 
 	for i, v := range expectedResult {
 		programStatement := programStatements.Statements[i]
-		if !testPutStatement(t, programStatement, v.expectedIdentifierName) {
+		if !testStatement(t, programStatement, &v.expectedIdentifierName) {
 			return
 		}
 	}
@@ -63,28 +63,67 @@ func TestPutStatementParsing2(t *testing.T) {
 	}
 }
 
-func testPutStatement(t *testing.T, statement ast.Statement, expectedName string) bool {
-	if statement.TokenLiteral() != "put" {
-		t.Fatalf("Test Failed! Expected Token Literal <put>. Got <%s>",
-			statement.TokenLiteral())
-		return false
+func TestUnboxStatementParsing(t *testing.T) {
+	input := `
+		unbox 5;
+		unbox 3;
+		unbox 1;
+
+	`
+	l := lexer.CreateLexer(input)
+	p := CreateParser(l)
+	program := p.ParseCardBoard()
+
+	// Expect 3 Unbox Statements
+	if len(program.Statements) != 3 {
+		t.Fatalf("Test Failed! Expected 3 Unbox Statements. Got <%d>.", len(program.Statements))
 	}
 
-	putStmt, ok := statement.(*ast.PutStatement)
-
-	if !ok {
-		// Fail, Got Wrong Type
-		t.Errorf("Test Failed! Expected Type <PUT>. Got Type <%T>", putStmt)
-		return false
-	} else {
-		putStmtName := putStmt.NodeIdentifier.NodeToken.TokenLiteral
-		if putStmtName != expectedName {
-			t.Errorf("Test Failed! Expected Identifier Name <%s>. Got <%s>", expectedName,
-				putStmtName)
-			return false
+	for _, v := range p.ParseCardBoard().Statements {
+		if !testStatement(t, v, nil) {
+			return
 		}
 	}
-	return true
+	// TODO: Parse Expression
+}
+
+func testStatement(t *testing.T, parsedStatement ast.Statement, expectedName *string) bool {
+
+	// Validating an 'unbox' statement, since no statement name check is involved
+	if expectedName == nil {
+		v, ok := parsedStatement.(*ast.UnboxStatement)
+		if !ok {
+			t.Fatalf("Test Failed! Expected Type <Unbox>. Got Type <%T>.", v)
+			return false
+		}
+
+		if v.TokenLiteral() != "unbox" {
+			t.Fatalf("Test Failed! Expected Token Literal <unbox>. Got Literal <%s>.", v.TokenLiteral())
+			return false
+		}
+
+		return true
+	} else
+	// Validating an 'put' statement
+	{
+		v, ok := parsedStatement.(*ast.PutStatement)
+		if !ok {
+			t.Fatalf("Test Failed! Expected Type <Put>. Got Type <%T>.", v)
+			return false
+		}
+
+		if v.TokenLiteral() != "put" {
+			t.Fatalf("Test Failed! Expected Token Literal <put>. Got Literal <%s>.", v.TokenLiteral())
+			return false
+		}
+
+		if v.NodeIdentifier.TokenLiteral() != *expectedName {
+			t.Fatalf("Test Failed! Expected Identifier Literal <%s>. Got Literal <%s>.", *expectedName, v.TokenLiteral())
+			return false
+		}
+
+		return true
+	}
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {

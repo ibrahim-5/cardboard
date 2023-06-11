@@ -43,3 +43,13 @@ type PutStatement struct {
 
 func (p *PutStatement) statementNode()       {}
 func (p *PutStatement) TokenLiteral() string { return p.NodeToken.TokenLiteral }
+
+// 'unbox' statement. Basically return statement!
+// unbox <expression>;
+type UnboxStatement struct {
+	NodeToken      token.Token
+	NodeExpression Expression
+}
+
+func (p *UnboxStatement) statementNode()       {}
+func (p *UnboxStatement) TokenLiteral() string { return p.NodeToken.TokenLiteral }

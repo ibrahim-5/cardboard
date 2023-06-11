@@ -47,6 +47,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.TokenType {
 	case token.PUT:
 		return p.parsePutStatement()
+	case token.UNBOX:
+		return p.parseUnboxStatement()
 	default:
 		return nil
 	}
@@ -77,6 +79,20 @@ func (p *Parser) parsePutStatement() *ast.PutStatement {
 	}
 
 	return putStmt
+}
+
+func (p *Parser) parseUnboxStatement() *ast.UnboxStatement {
+	unboxStmt := &ast.UnboxStatement{}
+
+	// Parse Unbox Token
+	unboxStmt.NodeToken = p.curToken
+
+	// TODO: Parse Expression
+	for !p.curTokenIs(token.SCOLON) {
+		p.nextToken()
+	}
+
+	return unboxStmt
 }
 
 func (p *Parser) expectPeek(t token.TokenType) bool {
