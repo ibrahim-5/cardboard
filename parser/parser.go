@@ -57,17 +57,18 @@ func (p *Parser) parsePutStatement() *ast.PutStatement {
 
 	// Parse Put Token
 	putStmt.NodeToken = p.curToken
+
 	// Parse Identifier
 	if !p.expectPeek(token.IDENTIFIER) {
-		p.errors = append(p.errors,
-			fmt.Sprintf("Error. Expected Token Type <Identifier>. Got Token Type <%s>.\n", p.peekToken.TokenType))
+		p.typeError(token.IDENTIFIER, p.peekToken.TokenType)
 		return nil
 	}
+
 	putStmt.NodeIdentifier = ast.Identifier{NodeToken: p.curToken, Value: p.curToken.TokenLiteral}
+
 	// Ensure Next Token is Assign
 	if !p.expectPeek(token.ASSIGN) {
-		p.errors = append(p.errors,
-			fmt.Sprintf("Error. Expected Token Type <Assignment>. Got Token Type <%s>.\n", p.peekToken.TokenType))
+		p.typeError(token.ASSIGN, p.peekToken.TokenType)
 		return nil
 	}
 	// TODO: Parse Expression
@@ -93,6 +94,20 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.TokenType == t
 }
 
-func (p *Parser) getErrors() *[]string {
-	return &p.errors
+func (p *Parser) getErrors() []string {
+	return p.errors
+}
+
+// In the case where the statement is invalid, we'll
+// need to skip it!
+func (p *Parser) skipStatement() {
+	for !(p.curTokenIs(token.SCOLON)) {
+		p.nextToken()
+	}
+}
+
+func (p *Parser) typeError(expectedType token.TokenType, gotType token.TokenType) {
+	p.errors = append(p.errors,
+		fmt.Sprintf("Error. Expected Token Type <%s>. Got Token Type <%s>.\n", expectedType, gotType))
+	p.skipStatement()
 }
