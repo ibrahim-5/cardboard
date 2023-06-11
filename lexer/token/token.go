@@ -12,17 +12,17 @@ const (
 	EOF     TokenType = "EOF"
 
 	// BRACES AND DELIMITERS
-	LBRAC  TokenType = "("
-	RBRAC  TokenType = ")"
+	LPAREN TokenType = "("
+	RPAREN TokenType = ")"
 	LCURLY TokenType = "{"
 	RCURLY TokenType = "}"
 	COMMA  TokenType = ","
 	SCOLON TokenType = ";"
 
 	// Arithmetic Operators
-	ADD TokenType = "+"
-	SUB TokenType = "-"
-	EQ  TokenType = "="
+	ADD    TokenType = "+"
+	SUB    TokenType = "-"
+	ASSIGN TokenType = "="
 
 	// User IDENTIFIERS
 	IDENTIFIER TokenType = "IDENTIFIER"

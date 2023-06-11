@@ -24,9 +24,9 @@ func (lex *Lexer) NextToken() token.Token {
 
 	// BRACES AND DELIMITERS
 	case '(':
-		curToken = token.NewToken(token.LBRAC, "(")
+		curToken = token.NewToken(token.LPAREN, "(")
 	case ')':
-		curToken = token.NewToken(token.RBRAC, ")")
+		curToken = token.NewToken(token.RPAREN, ")")
 	case '{':
 		curToken = token.NewToken(token.LCURLY, "{")
 	case '}':
@@ -42,7 +42,7 @@ func (lex *Lexer) NextToken() token.Token {
 	case '-':
 		curToken = token.NewToken(token.SUB, "-")
 	case '=':
-		curToken = token.NewToken(token.EQ, "=")
+		curToken = token.NewToken(token.ASSIGN, "=")
 
 	// EOF
 	case 0:
