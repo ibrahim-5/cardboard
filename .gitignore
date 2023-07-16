@@ -22,3 +22,7 @@ go.work
 
 # Documents
 *.pdf
+
+# IDE and Os Folders
+.vscode/
+.DS_STORE
