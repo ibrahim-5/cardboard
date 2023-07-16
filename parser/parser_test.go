@@ -135,3 +135,20 @@ func checkParserErrors(t *testing.T, p *Parser) {
 		t.FailNow()
 	}
 }
+
+func TestStringImplementations(t *testing.T) {
+	input := "put number = 2002;"
+	parser := CreateParser(lexer.CreateLexer(input))
+	program := parser.ParseCardBoard()
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
+	}
+
+	programString := program.String()
+
+	if programString != "put number = 2002;" {
+		t.Fatalf("Test Failed! Expected Program String 'put number = 2002;'. Got String <%s>", programString)
+	}
+
+}
