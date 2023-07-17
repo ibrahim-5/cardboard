@@ -167,11 +167,11 @@ func TestIdentifierExpression(t *testing.T) {
 
 	}
 
-	if ident.Value != "foobar" {
-		t.Fatalf("Test Failed! Identifier Value not %s. got=%s", "foobar", ident.Value)
+	if ident.Value != "hello" {
+		t.Fatalf("Test Failed! Identifier Value not %s. got=%s", "hello", ident.Value)
 	}
-	if ident.TokenLiteral() != "foobar" {
-		t.Fatalf("Test Failed! Identifier TokenLiteral not %s. got=%s", "foobar",
+	if ident.TokenLiteral() != "hello" {
+		t.Fatalf("Test Failed! Identifier TokenLiteral not %s. got=%s", "hello",
 			ident.TokenLiteral())
 	}
 }
