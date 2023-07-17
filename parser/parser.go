@@ -8,10 +8,12 @@ import (
 )
 
 type Parser struct {
-	lexer     *lexer.Lexer
-	curToken  token.Token
-	peekToken token.Token
-	errors    []string
+	lexer       *lexer.Lexer
+	curToken    token.Token
+	peekToken   token.Token
+	errors      []string
+	prefixFuncs map[token.TokenType]prefixFunc
+	infixFuncs  map[token.TokenType]infixFunc
 }
 
 func CreateParser(l *lexer.Lexer) Parser {
@@ -126,4 +128,18 @@ func (p *Parser) typeError(expectedType token.TokenType, gotType token.TokenType
 	p.errors = append(p.errors,
 		fmt.Sprintf("Error. Expected Token Type <%s>. Got Token Type <%s>.\n", expectedType, gotType))
 	p.skipStatement()
+}
+
+// Parser Functions -> Certain token types are associated to infix and prefix operations.
+type (
+	infixFunc  func(ast.Expression) ast.Expression
+	prefixFunc func() ast.Expression
+)
+
+func (p *Parser) setInfixFunction(token token.TokenType, function infixFunc) {
+	p.infixFuncs[token] = function
+}
+
+func (p *Parser) setPrefixFunction(token token.TokenType, function prefixFunc) {
+	p.prefixFuncs[token] = function
 }

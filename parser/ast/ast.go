@@ -84,3 +84,14 @@ func (u *UnboxStatement) String() string {
 	outputString.WriteString(";")
 	return outputString.String()
 }
+
+// Expression Statements link identifiers to expressions
+
+type ExpressionStatement struct {
+	NodeToken  token.Token
+	Expression Expression
+}
+
+func (es *ExpressionStatement) statementNode()       {}
+func (es *ExpressionStatement) TokenLiteral() string { return es.NodeToken.TokenLiteral }
+func (es *ExpressionStatement) String() string       { return es.NodeToken.TokenLiteral }

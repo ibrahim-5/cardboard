@@ -126,20 +126,11 @@ func testStatement(t *testing.T, parsedStatement ast.Statement, expectedName *st
 	}
 }
 
-func checkParserErrors(t *testing.T, p *Parser) {
-	errs := p.getErrors()
-	if len(errs) > 0 {
-		for _, err := range errs {
-			t.Error(err)
-		}
-		t.FailNow()
-	}
-}
-
 func TestStringImplementations(t *testing.T) {
 	input := "put number = 2002;"
 	parser := CreateParser(lexer.CreateLexer(input))
 	program := parser.ParseCardBoard()
+	checkParserErrors(t, &parser)
 
 	if len(program.Statements) != 1 {
 		t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
@@ -151,4 +142,46 @@ func TestStringImplementations(t *testing.T) {
 		t.Fatalf("Test Failed! Expected Program String 'put number = 2002;'. Got String <%s>", programString)
 	}
 
+}
+
+func TestIdentifierExpression(t *testing.T) {
+	input := "hello;"
+	p := CreateParser(lexer.CreateLexer(input))
+	program := p.ParseCardBoard()
+	checkParserErrors(t, &p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+
+	if !ok {
+		t.Fatalf("Test Failed! Statement is not *ast.ExpressionStatement. Got <%T>", program.Statements[0])
+	}
+
+	ident, ok := stmt.Expression.(*ast.Identifier)
+
+	if !ok {
+		t.Fatalf("Test Failed! Statement is not *ast.Identifier. Got <%T>", stmt.Expression)
+
+	}
+
+	if ident.Value != "foobar" {
+		t.Fatalf("Test Failed! Identifier Value not %s. got=%s", "foobar", ident.Value)
+	}
+	if ident.TokenLiteral() != "foobar" {
+		t.Fatalf("Test Failed! Identifier TokenLiteral not %s. got=%s", "foobar",
+			ident.TokenLiteral())
+	}
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	errs := p.getErrors()
+	if len(errs) > 0 {
+		for _, err := range errs {
+			t.Error(err)
+		}
+		t.FailNow()
+	}
 }
