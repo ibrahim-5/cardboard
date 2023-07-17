@@ -5,6 +5,7 @@ import (
 	"cardboard/lexer/token"
 	"cardboard/parser/ast"
 	"fmt"
+	"strconv"
 )
 
 type Parser struct {
@@ -16,12 +17,27 @@ type Parser struct {
 	infixFuncs  map[token.TokenType]infixFunc
 }
 
+const (
+	_ int = iota
+	LOWEST
+	EQUALS  // == LESSGREATER // > or <
+	SUM     //+
+	PRODUCT //*
+	PREFIX  //-Xor!X
+	CALL    // myFunction(X)
+)
+
 func CreateParser(l *lexer.Lexer) Parser {
 	p := Parser{lexer: l}
 
 	// Need to initialize both Tokens Pointers
 	p.nextToken()
 	p.nextToken()
+
+	// Instantiate Mapping
+	p.prefixFuncs = make(map[token.TokenType]prefixFunc)
+	p.setPrefixFunction(token.IDENTIFIER, p.parseIdentifier)
+	p.setPrefixFunction(token.INT, p.parseIntegerLiteral)
 
 	return p
 }
@@ -32,9 +48,7 @@ func (p *Parser) ParseCardBoard() ast.Program {
 
 	for !p.curTokenIs(token.EOF) {
 		stmt := p.parseStatement()
-		if stmt != nil {
-			program.Statements = append(program.Statements, stmt)
-		}
+		program.Statements = append(program.Statements, stmt)
 		p.nextToken()
 	}
 	return program
@@ -52,7 +66,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.UNBOX:
 		return p.parseUnboxStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -95,6 +109,45 @@ func (p *Parser) parseUnboxStatement() *ast.UnboxStatement {
 	}
 
 	return unboxStmt
+}
+
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	expStmt := &ast.ExpressionStatement{NodeToken: p.curToken}
+	expStmt.Expression = p.parseExpression(LOWEST)
+
+	// Optional Semi-colon
+	if p.peekTokenIs(token.SCOLON) {
+		p.nextToken()
+	}
+	return expStmt
+}
+
+func (p *Parser) parseExpression(precedence int) ast.Expression {
+	prefix := p.prefixFuncs[p.curToken.TokenType]
+	if prefix == nil {
+		return nil
+	}
+	leftExp := prefix()
+	return leftExp
+}
+
+func (p *Parser) parseIdentifier() ast.Expression {
+	return &ast.Identifier{
+		NodeToken: p.curToken,
+		Value:     p.curToken.TokenLiteral,
+	}
+}
+
+func (p *Parser) parseIntegerLiteral() ast.Expression {
+	val, err := strconv.ParseInt(p.curToken.TokenLiteral, 10, 0)
+	if err != nil {
+		error := fmt.Sprintf("Integer Parse Error. Couldn't Parse Integer From String = %s", p.curToken.TokenLiteral)
+		p.errors = append(p.errors, error)
+		return nil
+	} else {
+		return &ast.IntegerLiteral{NodeToken: p.curToken, Value: val}
+	}
+
 }
 
 func (p *Parser) expectPeek(t token.TokenType) bool {

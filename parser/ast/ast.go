@@ -95,3 +95,14 @@ type ExpressionStatement struct {
 func (es *ExpressionStatement) statementNode()       {}
 func (es *ExpressionStatement) TokenLiteral() string { return es.NodeToken.TokenLiteral }
 func (es *ExpressionStatement) String() string       { return es.NodeToken.TokenLiteral }
+
+// Integers are just expressions as well
+
+type IntegerLiteral struct {
+	NodeToken token.Token
+	Value     int64
+}
+
+func (il *IntegerLiteral) expressionNode()      {}
+func (il *IntegerLiteral) TokenLiteral() string { return il.NodeToken.TokenLiteral }
+func (il *IntegerLiteral) String() string       { return il.NodeToken.TokenLiteral }

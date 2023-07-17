@@ -176,6 +176,34 @@ func TestIdentifierExpression(t *testing.T) {
 	}
 }
 
+func TestIntegerLiteral(t *testing.T) {
+	input := "100;"
+	p := CreateParser(lexer.CreateLexer(input))
+	program := p.ParseCardBoard()
+	checkParserErrors(t, &p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+
+	if !ok {
+		t.Fatalf("Test Failed! Statement is not *ast.ExpressionStatement. Got <%T>", program.Statements[0])
+	}
+
+	ident, ok := stmt.Expression.(*ast.IntegerLiteral)
+
+	if !ok {
+		t.Fatalf("Test Failed! Statement is not *ast.IntegerLiteral. Got <%T>", stmt.Expression)
+
+	}
+
+	if ident.Value != 100 {
+		t.Fatalf("Test Failed! Identifier Value not %d. got=%d", 100, ident.Value)
+	}
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	errs := p.getErrors()
 	if len(errs) > 0 {
