@@ -23,12 +23,12 @@ const (
 	EQUALS  // == LESSGREATER // > or <
 	SUM     //+
 	PRODUCT //*
-	PREFIX  //-Xor!X
+	PREFIX  //-X or !X
 	CALL    // myFunction(X)
 )
 
-func CreateParser(l *lexer.Lexer) Parser {
-	p := Parser{lexer: l}
+func CreateParser(l *lexer.Lexer) *Parser {
+	p := &Parser{lexer: l}
 
 	// Need to initialize both Tokens Pointers
 	p.nextToken()
@@ -38,6 +38,7 @@ func CreateParser(l *lexer.Lexer) Parser {
 	p.prefixFuncs = make(map[token.TokenType]prefixFunc)
 	p.setPrefixFunction(token.IDENTIFIER, p.parseIdentifier)
 	p.setPrefixFunction(token.INT, p.parseIntegerLiteral)
+	p.setPrefixFunction(token.SUB, p.parsePrefixExpression)
 
 	return p
 }
@@ -125,6 +126,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixFuncs[p.curToken.TokenType]
 	if prefix == nil {
+		p.errors = append(p.errors, fmt.Sprintf("Couldn't find prefix function for %s", p.curToken.TokenLiteral))
 		return nil
 	}
 	leftExp := prefix()
@@ -144,10 +146,18 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 		error := fmt.Sprintf("Integer Parse Error. Couldn't Parse Integer From String = %s", p.curToken.TokenLiteral)
 		p.errors = append(p.errors, error)
 		return nil
-	} else {
-		return &ast.IntegerLiteral{NodeToken: p.curToken, Value: val}
 	}
+	return &ast.IntegerLiteral{NodeToken: p.curToken, Value: val}
+}
 
+func (p *Parser) parsePrefixExpression() ast.Expression {
+	expression := &ast.PrefixExpression{
+		NodeToken: p.curToken,
+		Operator:  p.curToken.TokenLiteral,
+	}
+	p.nextToken()
+	expression.Right = p.parseExpression(PREFIX)
+	return expression
 }
 
 func (p *Parser) expectPeek(t token.TokenType) bool {

@@ -106,3 +106,22 @@ type IntegerLiteral struct {
 func (il *IntegerLiteral) expressionNode()      {}
 func (il *IntegerLiteral) TokenLiteral() string { return il.NodeToken.TokenLiteral }
 func (il *IntegerLiteral) String() string       { return il.NodeToken.TokenLiteral }
+
+// Prefix Expressions
+
+type PrefixExpression struct {
+	NodeToken token.Token
+	Operator  string
+	Right     Expression
+}
+
+func (pe *PrefixExpression) expressionNode()      {}
+func (pe *PrefixExpression) TokenLiteral() string { return pe.NodeToken.TokenLiteral }
+func (pe *PrefixExpression) String() string {
+	var outputString bytes.Buffer
+	outputString.WriteString("(")
+	outputString.WriteString(pe.Operator)
+	outputString.WriteString(pe.Right.String())
+	outputString.WriteString(")")
+	return outputString.String()
+}
