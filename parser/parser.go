@@ -17,6 +17,7 @@ type Parser struct {
 	infixFuncs  map[token.TokenType]infixFunc
 }
 
+// Precedence For Operators < Not all supported right now! >
 const (
 	_ int = iota
 	LOWEST
@@ -27,6 +28,12 @@ const (
 	CALL    // myFunction(X)
 )
 
+// Precedence mapping
+var precedence = map[token.TokenType]int{
+	token.ADD: SUM,
+	token.SUB: SUM,
+}
+
 func CreateParser(l *lexer.Lexer) *Parser {
 	p := &Parser{lexer: l}
 
@@ -35,10 +42,16 @@ func CreateParser(l *lexer.Lexer) *Parser {
 	p.nextToken()
 
 	// Instantiate Mapping
+	// Prefix
 	p.prefixFuncs = make(map[token.TokenType]prefixFunc)
 	p.setPrefixFunction(token.IDENTIFIER, p.parseIdentifier)
 	p.setPrefixFunction(token.INT, p.parseIntegerLiteral)
 	p.setPrefixFunction(token.SUB, p.parsePrefixExpression)
+
+	// Infix
+	p.infixFuncs = make(map[token.TokenType]infixFunc)
+	p.setInfixFunction(token.ADD, p.parseInfixExpression)
+	p.setInfixFunction(token.SUB, p.parseInfixExpression)
 
 	return p
 }
@@ -130,6 +143,16 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		return nil
 	}
 	leftExp := prefix()
+
+	for !p.peekTokenIs(token.SCOLON) && precedence < p.peekPrecedence() {
+		infix := p.infixFuncs[p.peekToken.TokenType]
+		if infix == nil {
+			return leftExp
+		}
+		p.nextToken()
+		leftExp = infix(leftExp)
+	}
+
 	return leftExp
 }
 
@@ -158,6 +181,34 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 	p.nextToken()
 	expression.Right = p.parseExpression(PREFIX)
 	return expression
+}
+
+func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
+	expression := &ast.InfixExpression{
+		NodeToken: p.curToken,
+		Left:      left,
+		Operator:  p.curToken.TokenLiteral,
+	}
+
+	precedence := p.curPrecedence()
+	p.nextToken()
+	expression.Right = p.parseExpression(precedence)
+
+	return expression
+}
+
+func (p *Parser) peekPrecedence() int {
+	if precedence, ok := precedence[p.peekToken.TokenType]; ok {
+		return precedence
+	}
+	return LOWEST
+}
+
+func (p *Parser) curPrecedence() int {
+	if precedence, ok := precedence[p.curToken.TokenType]; ok {
+		return precedence
+	}
+	return LOWEST
 }
 
 func (p *Parser) expectPeek(t token.TokenType) bool {

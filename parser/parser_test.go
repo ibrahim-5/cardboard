@@ -222,7 +222,6 @@ func TestPrefixExpression(t *testing.T) {
 		checkParserErrors(t, p)
 
 		if len(program.Statements) != 1 {
-			t.Log(program.Statements)
 			t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
 		}
 
@@ -247,6 +246,49 @@ func TestPrefixExpression(t *testing.T) {
 			return
 		}
 
+	}
+}
+
+func TestInfixLiteralExpressions(t *testing.T) {
+	testCases := []struct {
+		input    string
+		left     int64
+		operator string
+		right    int64
+	}{
+		{"10 + 10;", 10, "+", 10},
+		{"10 - 5;", 10, "-", 5},
+	}
+
+	for _, tc := range testCases {
+		p := CreateParser(lexer.CreateLexer(tc.input))
+		program := p.ParseCardBoard()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+
+		if !ok {
+			t.Fatalf("Test Failed! Statement is not *ast.ExpressionStatement. Got <%T>", program.Statements[0])
+		}
+
+		exp, ok := stmt.Expression.(*ast.InfixExpression)
+
+		if !ok {
+			t.Fatalf("Test Failed! Statement is not *ast.InfixExpression. Got <%T>", stmt.Expression)
+
+		}
+
+		if exp.Operator != tc.operator {
+			t.Fatalf("Test Failed! Operator not equal to %s . Got <%s>", tc.operator, exp.Operator)
+		}
+
+		if !testIntegerLiterals(t, tc.left, exp.Left) || !testIntegerLiterals(t, tc.right, exp.Right) {
+			return
+		}
 	}
 }
 
