@@ -292,6 +292,34 @@ func TestInfixLiteralExpressions(t *testing.T) {
 	}
 }
 
+func TestGroupedExpressions(t *testing.T) {
+	testCases := []struct {
+		input string
+		out   string
+	}{
+		{
+			"1 + (1 + (5 + 10))", "(1+(1+(5+10)))",
+		},
+		{
+			"-10 + (1 + 2)", "((-10)+(1+2))",
+		},
+	}
+
+	for _, tc := range testCases {
+		p := CreateParser(lexer.CreateLexer(tc.input))
+		program := p.ParseCardBoard()
+		checkParserErrors(t, p)
+
+		expr, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("Test failed! Expected type *ast.ExpressionStatement. Got <%T>", program.Statements[0])
+		}
+		if expr.Expression.String() != tc.out {
+			t.Fatalf("Test failed! Expected %s. Got <%s>", tc.out, expr.Expression.String())
+		}
+	}
+}
+
 func testIntegerLiterals(t *testing.T, tcVal int64, exp ast.Expression) bool {
 	intexp, ok := exp.(*ast.IntegerLiteral)
 

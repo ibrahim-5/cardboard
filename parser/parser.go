@@ -47,6 +47,7 @@ func CreateParser(l *lexer.Lexer) *Parser {
 	p.setPrefixFunction(token.IDENTIFIER, p.parseIdentifier)
 	p.setPrefixFunction(token.INT, p.parseIntegerLiteral)
 	p.setPrefixFunction(token.SUB, p.parsePrefixExpression)
+	p.setPrefixFunction(token.LPAREN, p.parseGroupedExpression)
 
 	// Infix
 	p.infixFuncs = make(map[token.TokenType]infixFunc)
@@ -195,6 +196,17 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	expression.Right = p.parseExpression(precedence)
 
 	return expression
+}
+
+func (p *Parser) parseGroupedExpression() ast.Expression {
+	p.nextToken()
+
+	expr := p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+	return expr
 }
 
 func (p *Parser) peekPrecedence() int {
