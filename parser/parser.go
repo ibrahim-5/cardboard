@@ -80,6 +80,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parsePutStatement()
 	case token.UNBOX:
 		return p.parseUnboxStatement()
+	case token.BOX:
+		return p.parseBoxStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -204,9 +206,84 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	expr := p.parseExpression(LOWEST)
 
 	if !p.expectPeek(token.RPAREN) {
+		err := fmt.Sprintf("error. expected ). found %s instead.", p.peekToken.TokenLiteral)
+		p.addError(err)
 		return nil
 	}
 	return expr
+}
+
+func (p *Parser) parseBoxStatement() ast.Statement {
+	box := &ast.BoxStatement{NodeToken: p.curToken}
+
+	if !p.expectPeek(token.IDENTIFIER) {
+		p.addError("error. expected function name after box declaration.")
+		return nil
+	}
+
+	box.Name = ast.Identifier{NodeToken: p.curToken, Value: p.curToken.TokenLiteral}
+
+	if !p.expectPeek(token.LPAREN) {
+		p.addError(fmt.Sprintf("error. expected parameter list after function name. found %s", p.peekToken.TokenType))
+		return nil
+	}
+
+	box.ParameterList = p.parseFunctionParameters()
+
+	if !p.expectPeek(token.LCURLY) {
+		p.addError("error. expected function block statement")
+		return nil
+	}
+
+	box.Body = p.parseBlockStatement()
+
+	if !p.curTokenIs(token.RCURLY) {
+		p.addError(fmt.Sprintf("expected block closure! got %s", p.peekToken.TokenType))
+		return nil
+	}
+
+	p.nextToken()
+	return box
+}
+
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
+	block := &ast.BlockStatement{}
+	block.NodeToken = p.curToken
+
+	p.nextToken()
+
+	for !p.curTokenIs(token.RCURLY) && !p.curTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+		block.Statements = append(block.Statements, stmt)
+		p.nextToken()
+	}
+	return block
+}
+
+func (p *Parser) parseFunctionParameters() []*ast.Identifier {
+	list := []*ast.Identifier{}
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		return list
+	}
+
+	p.nextToken()
+
+	list = append(list, &ast.Identifier{NodeToken: p.curToken, Value: p.curToken.TokenLiteral})
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		list = append(list, &ast.Identifier{NodeToken: p.curToken, Value: p.curToken.TokenLiteral})
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		p.addError("error. expected parameter list closure.")
+		return nil
+	}
+
+	return list
 }
 
 func (p *Parser) peekPrecedence() int {
@@ -268,4 +345,9 @@ func (p *Parser) setInfixFunction(token token.TokenType, function infixFunc) {
 
 func (p *Parser) setPrefixFunction(token token.TokenType, function prefixFunc) {
 	p.prefixFuncs[token] = function
+}
+
+// Helper function to help to register errors
+func (p *Parser) addError(err string) {
+	p.errors = append(p.errors, err)
 }

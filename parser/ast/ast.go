@@ -145,3 +145,40 @@ func (ie *InfixExpression) String() string {
 	outputString.WriteString(")")
 	return outputString.String()
 }
+
+// Box Statement -> box <identifier> <parameter list> <block statement>
+type BlockStatement struct {
+	NodeToken  token.Token
+	Statements []Statement
+}
+
+func (bs *BlockStatement) statementNode()       {}
+func (bs *BlockStatement) TokenLiteral() string { return bs.NodeToken.TokenLiteral }
+func (bs *BlockStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString("{")
+	for _, s := range bs.Statements {
+		out.WriteString(s.String())
+	}
+	out.WriteString("}")
+	return out.String()
+}
+
+type BoxStatement struct {
+	NodeToken     token.Token
+	Name          Identifier
+	ParameterList []*Identifier
+	Body          *BlockStatement
+}
+
+func (box *BoxStatement) statementNode()       {}
+func (box *BoxStatement) TokenLiteral() string { return box.NodeToken.TokenLiteral }
+func (box *BoxStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString("{")
+	for _, s := range box.Body.Statements {
+		out.WriteString(s.String())
+	}
+	out.WriteString("}")
+	return out.String()
+}

@@ -320,6 +320,83 @@ func TestGroupedExpressions(t *testing.T) {
 	}
 }
 
+func TestBoxStatements(t *testing.T) {
+	input := `
+	box add(a, b){
+		unbox a;
+	}
+	`
+
+	p := CreateParser(lexer.CreateLexer(input))
+	program := p.ParseCardBoard()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
+	}
+
+	function, ok := program.Statements[0].(*ast.BoxStatement)
+
+	if !ok {
+		t.Fatalf("Test Failed! Expected type of ast.BoxStatement. Got <%T>", program.Statements[0])
+	}
+
+	if function.Name.Value != "add" {
+		t.Fatalf("Test Failed! Expected function name = %s. Got <%s>", "add", function.Name)
+	}
+
+	if len(function.ParameterList) != 2 {
+		t.Fatalf("Test Failed! Expected function parameter list of length = %d. Got <%d>", 2, len(function.ParameterList))
+	}
+
+	if len(function.Body.Statements) != 1 {
+		t.Fatalf("Test Failed! Expected Function block statement length of 1. Got Length <%d>", len(function.Body.Statements))
+	}
+
+	_, ok = function.Body.Statements[0].(*ast.UnboxStatement)
+
+	if !ok {
+		t.Fatalf("Test Failed! Expected type of ast.UnboxStatement. Got <%T>", function.Body.Statements[0])
+	}
+}
+
+func TestBoxParameterParsing(t *testing.T) {
+	testCases := []struct {
+		input string
+		list  []string
+	}{
+		{"box add(){}", []string{}},
+		{"box add(a){}", []string{"a"}},
+		{"box add(a, b,  c){}", []string{"a", "b", "c"}},
+	}
+
+	for _, tc := range testCases {
+		p := CreateParser(lexer.CreateLexer(tc.input))
+		program := p.ParseCardBoard()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("test failed. expected program length of 1. got <%d>", len(program.Statements))
+		}
+
+		box, ok := program.Statements[0].(*ast.BoxStatement)
+
+		if !ok {
+			t.Fatalf("test failed. expected type of ast.BoxStatement. Got <%T>.", program.Statements[0])
+		}
+
+		if len(box.ParameterList) != len(tc.list) {
+			t.Fatalf("test failed. expected type of ast.BoxStatement. Got <%T>.", program.Statements[0])
+		}
+
+		for idx, param := range box.ParameterList {
+			if param.Value != tc.list[idx] {
+				t.Fatalf("test failed. parameter no.%d not equal to %s.", idx, tc.list[idx])
+			}
+		}
+	}
+}
+
 func testIntegerLiterals(t *testing.T, tcVal int64, exp ast.Expression) bool {
 	intexp, ok := exp.(*ast.IntegerLiteral)
 
