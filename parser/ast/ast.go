@@ -174,6 +174,12 @@ func (box *BoxExpression) expressionNode()      {}
 func (box *BoxExpression) TokenLiteral() string { return box.NodeToken.TokenLiteral }
 func (box *BoxExpression) String() string {
 	var out bytes.Buffer
+	out.WriteString("(")
+	for _, arg := range box.ParameterList {
+		out.WriteString(arg.String())
+	}
+	out.WriteString(")")
+
 	out.WriteString("{")
 	for _, s := range box.Body.Statements {
 		out.WriteString(s.String())
@@ -192,5 +198,12 @@ func (ce *CallExpression) expressionNode()      {}
 func (ce *CallExpression) TokenLiteral() string { return ce.NodeToken.TokenLiteral }
 func (ce *CallExpression) String() string {
 	var out bytes.Buffer
+	out.WriteString(ce.Function.String())
+	out.WriteString("(")
+	for _, arg := range ce.Arguments {
+		out.WriteString(arg.String())
+	}
+	out.WriteString(")")
+	out.WriteString(ce.Function.String())
 	return out.String()
 }
