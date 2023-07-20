@@ -11,13 +11,13 @@ func TestLexer1(t *testing.T) {
 		expectedType    token.TokenType
 		expectedLiteral string
 	}{
-		{expectedType: token.EQ, expectedLiteral: "="},
+		{expectedType: token.ASSIGN, expectedLiteral: "="},
 		{expectedType: token.ADD, expectedLiteral: "+"},
 		{expectedType: token.LCURLY, expectedLiteral: "{"},
 		{expectedType: token.RCURLY, expectedLiteral: "}"},
 		{expectedType: token.SUB, expectedLiteral: "-"},
-		{expectedType: token.LBRAC, expectedLiteral: "("},
-		{expectedType: token.RBRAC, expectedLiteral: ")"},
+		{expectedType: token.LPAREN, expectedLiteral: "("},
+		{expectedType: token.RPAREN, expectedLiteral: ")"},
 		{expectedType: token.EOF, expectedLiteral: ""},
 	}
 
@@ -55,15 +55,15 @@ func TestLexer2(t *testing.T) {
 	}{
 		{expectedType: token.BOX, expectedLiteral: "box"},
 		{expectedType: token.IDENTIFIER, expectedLiteral: "add"},
-		{expectedType: token.LBRAC, expectedLiteral: "("},
+		{expectedType: token.LPAREN, expectedLiteral: "("},
 		{expectedType: token.IDENTIFIER, expectedLiteral: "a"},
 		{expectedType: token.COMMA, expectedLiteral: ","},
 		{expectedType: token.IDENTIFIER, expectedLiteral: "b"},
-		{expectedType: token.RBRAC, expectedLiteral: ")"},
+		{expectedType: token.RPAREN, expectedLiteral: ")"},
 		{expectedType: token.LCURLY, expectedLiteral: "{"},
 		{expectedType: token.PUT, expectedLiteral: "put"},
 		{expectedType: token.IDENTIFIER, expectedLiteral: "y"},
-		{expectedType: token.EQ, expectedLiteral: "="},
+		{expectedType: token.ASSIGN, expectedLiteral: "="},
 		{expectedType: token.IDENTIFIER, expectedLiteral: "a"},
 		{expectedType: token.ADD, expectedLiteral: "+"},
 		{expectedType: token.IDENTIFIER, expectedLiteral: "b"},
