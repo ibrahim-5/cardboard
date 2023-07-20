@@ -181,3 +181,16 @@ func (box *BoxExpression) String() string {
 	out.WriteString("}")
 	return out.String()
 }
+
+type CallExpression struct {
+	NodeToken token.Token
+	Function  Expression
+	Arguments []Expression
+}
+
+func (ce *CallExpression) expressionNode()      {}
+func (ce *CallExpression) TokenLiteral() string { return ce.NodeToken.TokenLiteral }
+func (ce *CallExpression) String() string {
+	var out bytes.Buffer
+	return out.String()
+}

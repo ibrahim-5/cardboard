@@ -30,8 +30,9 @@ const (
 
 // Precedence mapping
 var precedence = map[token.TokenType]int{
-	token.ADD: SUM,
-	token.SUB: SUM,
+	token.ADD:    SUM,
+	token.SUB:    SUM,
+	token.LPAREN: CALL,
 }
 
 func CreateParser(l *lexer.Lexer) *Parser {
@@ -54,6 +55,7 @@ func CreateParser(l *lexer.Lexer) *Parser {
 	p.infixFuncs = make(map[token.TokenType]infixFunc)
 	p.setInfixFunction(token.ADD, p.parseInfixExpression)
 	p.setInfixFunction(token.SUB, p.parseInfixExpression)
+	p.setInfixFunction(token.LPAREN, p.parseCallExpression)
 
 	return p
 }
@@ -105,8 +107,10 @@ func (p *Parser) parsePutStatement() *ast.PutStatement {
 		p.typeError(token.ASSIGN, p.peekToken.TokenType)
 		return nil
 	}
-	// TODO: Parse Expression
+
+	p.nextToken()
 	for !p.curTokenIs(token.SCOLON) {
+		putStmt.NodeExpression = p.parseExpression(LOWEST)
 		p.nextToken()
 	}
 
@@ -119,8 +123,9 @@ func (p *Parser) parseUnboxStatement() *ast.UnboxStatement {
 	// Parse Unbox Token
 	unboxStmt.NodeToken = p.curToken
 
-	// TODO: Parse Expression
+	p.nextToken()
 	for !p.curTokenIs(token.SCOLON) {
+		unboxStmt.NodeExpression = p.parseExpression(LOWEST)
 		p.nextToken()
 	}
 
@@ -276,6 +281,36 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	}
 
 	return list
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	expr := &ast.CallExpression{NodeToken: p.curToken, Function: function}
+	expr.Arguments = p.parseCallArguments()
+	return expr
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	arguments := []ast.Expression{}
+
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+		return arguments
+	}
+
+	p.nextToken()
+	arguments = append(arguments, p.parseExpression(LOWEST))
+
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken()
+		p.nextToken()
+		arguments = append(arguments, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		p.addError("error. no closure to call expression argument list")
+		return nil
+	}
+	return arguments
 }
 
 func (p *Parser) peekPrecedence() int {

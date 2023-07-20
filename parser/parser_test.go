@@ -127,24 +127,23 @@ func testStatement(t *testing.T, parsedStatement ast.Statement, expectedName *st
 	}
 }
 
-// This test will fail for now.
-// func TestStringImplementations(t *testing.T) {
-// 	input := "put number = 2002;"
-// 	parser := CreateParser(lexer.CreateLexer(input))
-// 	program := parser.ParseCardBoard()
-// 	checkParserErrors(t, parser)
+func TestStringImplementations(t *testing.T) {
+	input := "put number = 2002;"
+	parser := CreateParser(lexer.CreateLexer(input))
+	program := parser.ParseCardBoard()
+	checkParserErrors(t, parser)
 
-// 	if len(program.Statements) != 1 {
-// 		t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
-// 	}
+	if len(program.Statements) != 1 {
+		t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
+	}
 
-// 	programString := program.String()
+	programString := program.String()
 
-// 	if programString != "put number = 2002;" {
-// 		t.Fatalf("Test Failed! Expected Program String 'put number = 2002;'. Got String <%s>", programString)
-// 	}
+	if programString != "put number = 2002;" {
+		t.Fatalf("Test Failed! Expected Program String 'put number = 2002;'. Got String <%s>", programString)
+	}
 
-// }
+}
 
 func TestIdentifierExpression(t *testing.T) {
 	input := "hello;"
@@ -324,7 +323,7 @@ func TestBoxStatements(t *testing.T) {
 	input := `
 	box (a, b){
 		unbox a;
-	}
+	};
 	`
 
 	p := CreateParser(lexer.CreateLexer(input))
@@ -401,6 +400,44 @@ func TestBoxParameterParsing(t *testing.T) {
 			if param.Value != tc.list[idx] {
 				t.Fatalf("test failed. parameter no.%d not equal to %s.", idx, tc.list[idx])
 			}
+		}
+	}
+}
+
+func TestCallExpression(t *testing.T) {
+	input := "add(10, 10 + 50 ,    10 - 99);"
+	ans := []string{"10", "(10+50)", "(10-99)"}
+	p := CreateParser(lexer.CreateLexer(input))
+	program := p.ParseCardBoard()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("test failed. expected program length of 1. got <%d>", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+
+	if !ok {
+		t.Fatalf("Test Failed! Statement is not *ast.ExpressionStatement. Got <%T>", program.Statements[0])
+	}
+
+	call, ok := stmt.Expression.(*ast.CallExpression)
+
+	if !ok {
+		t.Fatalf("test failed. expected type of ast.CallExpression. Got <%T>.", program.Statements[0])
+	}
+
+	if call.Function.String() != "add" {
+		t.Fatalf("test failed. call expression not equal to add")
+	}
+
+	if len(call.Arguments) != 3 {
+		t.Fatalf("wrong length of arguments. got=%d", len(call.Arguments))
+	}
+
+	for idx, tc := range call.Arguments {
+		if tc.String() != ans[idx] {
+			t.Fatalf("test failed. argument not equal")
 		}
 	}
 }
