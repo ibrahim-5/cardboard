@@ -48,6 +48,7 @@ func CreateParser(l *lexer.Lexer) *Parser {
 	p.setPrefixFunction(token.INT, p.parseIntegerLiteral)
 	p.setPrefixFunction(token.SUB, p.parsePrefixExpression)
 	p.setPrefixFunction(token.LPAREN, p.parseGroupedExpression)
+	p.setPrefixFunction(token.BOX, p.parseBoxStatement)
 
 	// Infix
 	p.infixFuncs = make(map[token.TokenType]infixFunc)
@@ -80,8 +81,6 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parsePutStatement()
 	case token.UNBOX:
 		return p.parseUnboxStatement()
-	case token.BOX:
-		return p.parseBoxStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -213,15 +212,8 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	return expr
 }
 
-func (p *Parser) parseBoxStatement() ast.Statement {
-	box := &ast.BoxStatement{NodeToken: p.curToken}
-
-	if !p.expectPeek(token.IDENTIFIER) {
-		p.addError("error. expected function name after box declaration.")
-		return nil
-	}
-
-	box.Name = ast.Identifier{NodeToken: p.curToken, Value: p.curToken.TokenLiteral}
+func (p *Parser) parseBoxStatement() ast.Expression {
+	box := &ast.BoxExpression{NodeToken: p.curToken}
 
 	if !p.expectPeek(token.LPAREN) {
 		p.addError(fmt.Sprintf("error. expected parameter list after function name. found %s", p.peekToken.TokenType))

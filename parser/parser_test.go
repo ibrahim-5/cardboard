@@ -322,7 +322,7 @@ func TestGroupedExpressions(t *testing.T) {
 
 func TestBoxStatements(t *testing.T) {
 	input := `
-	box add(a, b){
+	box (a, b){
 		unbox a;
 	}
 	`
@@ -335,14 +335,16 @@ func TestBoxStatements(t *testing.T) {
 		t.Fatalf("Test Failed! Expected Program Length Of 1. Got Length <%d>", len(program.Statements))
 	}
 
-	function, ok := program.Statements[0].(*ast.BoxStatement)
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+
+	if !ok {
+		t.Fatalf("Test Failed! Statement is not *ast.ExpressionStatement. Got <%T>", program.Statements[0])
+	}
+
+	function, ok := stmt.Expression.(*ast.BoxExpression)
 
 	if !ok {
 		t.Fatalf("Test Failed! Expected type of ast.BoxStatement. Got <%T>", program.Statements[0])
-	}
-
-	if function.Name.Value != "add" {
-		t.Fatalf("Test Failed! Expected function name = %s. Got <%s>", "add", function.Name)
 	}
 
 	if len(function.ParameterList) != 2 {
@@ -365,9 +367,9 @@ func TestBoxParameterParsing(t *testing.T) {
 		input string
 		list  []string
 	}{
-		{"box add(){}", []string{}},
-		{"box add(a){}", []string{"a"}},
-		{"box add(a, b,  c){}", []string{"a", "b", "c"}},
+		{"box (){}", []string{}},
+		{"box (a){}", []string{"a"}},
+		{"box (a, b,  c){}", []string{"a", "b", "c"}},
 	}
 
 	for _, tc := range testCases {
@@ -379,7 +381,13 @@ func TestBoxParameterParsing(t *testing.T) {
 			t.Fatalf("test failed. expected program length of 1. got <%d>", len(program.Statements))
 		}
 
-		box, ok := program.Statements[0].(*ast.BoxStatement)
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+
+		if !ok {
+			t.Fatalf("Test Failed! Statement is not *ast.ExpressionStatement. Got <%T>", program.Statements[0])
+		}
+
+		box, ok := stmt.Expression.(*ast.BoxExpression)
 
 		if !ok {
 			t.Fatalf("test failed. expected type of ast.BoxStatement. Got <%T>.", program.Statements[0])

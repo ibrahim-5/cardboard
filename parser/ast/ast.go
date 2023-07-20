@@ -164,16 +164,15 @@ func (bs *BlockStatement) String() string {
 	return out.String()
 }
 
-type BoxStatement struct {
+type BoxExpression struct {
 	NodeToken     token.Token
-	Name          Identifier
 	ParameterList []*Identifier
 	Body          *BlockStatement
 }
 
-func (box *BoxStatement) statementNode()       {}
-func (box *BoxStatement) TokenLiteral() string { return box.NodeToken.TokenLiteral }
-func (box *BoxStatement) String() string {
+func (box *BoxExpression) expressionNode()      {}
+func (box *BoxExpression) TokenLiteral() string { return box.NodeToken.TokenLiteral }
+func (box *BoxExpression) String() string {
 	var out bytes.Buffer
 	out.WriteString("{")
 	for _, s := range box.Body.Statements {
