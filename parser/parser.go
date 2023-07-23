@@ -127,9 +127,10 @@ func (p *Parser) parseUnboxStatement() *ast.UnboxStatement {
 	unboxStmt.NodeToken = p.curToken
 
 	p.nextToken()
-	for !p.curTokenIs(token.SCOLON) {
-		unboxStmt.NodeExpression = p.parseExpression(LOWEST)
-		p.nextToken()
+	unboxStmt.NodeExpression = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.SCOLON) {
+		p.addError("error. expected semi colon at the end of unbox statement.")
 	}
 
 	return unboxStmt
@@ -351,7 +352,7 @@ func (p *Parser) GetErrors() []string {
 // In the case where the statement is invalid, we'll
 // need to skip it!
 func (p *Parser) skipStatement() {
-	for !(p.curTokenIs(token.SCOLON)) {
+	for !p.curTokenIs(token.SCOLON) && !p.curTokenIs(token.EOF) {
 		p.nextToken()
 	}
 }
