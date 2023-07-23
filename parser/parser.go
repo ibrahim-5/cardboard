@@ -109,9 +109,12 @@ func (p *Parser) parsePutStatement() *ast.PutStatement {
 	}
 
 	p.nextToken()
-	for !p.curTokenIs(token.SCOLON) {
-		putStmt.NodeExpression = p.parseExpression(LOWEST)
-		p.nextToken()
+	putStmt.NodeExpression = p.parseExpression(LOWEST)
+
+	// At this point peek token should be semi colon!
+	for !p.expectPeek(token.SCOLON) {
+		p.addError("expected ; at the end of the box statement")
+		return nil
 	}
 
 	return putStmt
@@ -124,9 +127,10 @@ func (p *Parser) parseUnboxStatement() *ast.UnboxStatement {
 	unboxStmt.NodeToken = p.curToken
 
 	p.nextToken()
-	for !p.curTokenIs(token.SCOLON) {
-		unboxStmt.NodeExpression = p.parseExpression(LOWEST)
-		p.nextToken()
+	unboxStmt.NodeExpression = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.SCOLON) {
+		p.addError("error. expected semi colon at the end of unbox statement.")
 	}
 
 	return unboxStmt
@@ -239,7 +243,6 @@ func (p *Parser) parseBoxStatement() ast.Expression {
 		return nil
 	}
 
-	p.nextToken()
 	return box
 }
 
@@ -342,14 +345,14 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.TokenType == t
 }
 
-func (p *Parser) getErrors() []string {
+func (p *Parser) GetErrors() []string {
 	return p.errors
 }
 
 // In the case where the statement is invalid, we'll
 // need to skip it!
 func (p *Parser) skipStatement() {
-	for !(p.curTokenIs(token.SCOLON)) {
+	for !p.curTokenIs(token.SCOLON) && !p.curTokenIs(token.EOF) {
 		p.nextToken()
 	}
 }
