@@ -61,7 +61,7 @@ func CreateParser(l *lexer.Lexer) *Parser {
 }
 
 // Parses Cardboard Program
-func (p *Parser) ParseCardBoard() ast.Program {
+func (p *Parser) ParseCardBoard() *ast.Program {
 	program := ast.Program{}
 
 	for !p.curTokenIs(token.EOF) {
@@ -69,7 +69,7 @@ func (p *Parser) ParseCardBoard() ast.Program {
 		program.Statements = append(program.Statements, stmt)
 		p.nextToken()
 	}
-	return program
+	return &program
 }
 
 func (p *Parser) nextToken() {

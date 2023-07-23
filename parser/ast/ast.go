@@ -34,6 +34,8 @@ func (program *Program) String() string {
 	return outputString.String()
 }
 
+func (program *Program) TokenLiteral() string { return "" }
+
 // Identifiers are Expressions.
 type Identifier struct {
 	NodeToken token.Token
