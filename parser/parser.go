@@ -109,9 +109,12 @@ func (p *Parser) parsePutStatement() *ast.PutStatement {
 	}
 
 	p.nextToken()
-	for !p.curTokenIs(token.SCOLON) {
-		putStmt.NodeExpression = p.parseExpression(LOWEST)
-		p.nextToken()
+	putStmt.NodeExpression = p.parseExpression(LOWEST)
+
+	// At this point peek token should be semi colon!
+	for !p.expectPeek(token.SCOLON) {
+		p.addError("expected ; at the end of the box statement")
+		return nil
 	}
 
 	return putStmt
@@ -239,7 +242,6 @@ func (p *Parser) parseBoxStatement() ast.Expression {
 		return nil
 	}
 
-	p.nextToken()
 	return box
 }
 
@@ -342,7 +344,7 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.TokenType == t
 }
 
-func (p *Parser) getErrors() []string {
+func (p *Parser) GetErrors() []string {
 	return p.errors
 }
 

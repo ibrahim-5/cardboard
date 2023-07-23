@@ -59,8 +59,8 @@ func TestPutStatementParsing2(t *testing.T) {
 
 	// The Parser Should have 2 Errors in its error log,
 	// therefore validate that this is the case!
-	if len(p.getErrors()) != 2 {
-		t.Fatalf("Test Failed! Expected 2 Errors! Got <%d>.", len(p.getErrors()))
+	if len(p.GetErrors()) != 2 {
+		t.Fatalf("Test Failed! Expected 2 Errors! Got <%d>.", len(p.GetErrors()))
 	}
 }
 
@@ -442,6 +442,41 @@ func TestCallExpression(t *testing.T) {
 	}
 }
 
+func TestPutBoxStatementParsing(t *testing.T) {
+	input := `
+	put add = box(a, b) {
+		return a + b;
+	};
+	`
+	parser := CreateParser(lexer.CreateLexer(input))
+	program := parser.ParseCardBoard()
+	checkParserErrors(t, parser)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("test failed. expected program length of 1. got <%d>", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.PutStatement)
+
+	if !ok {
+		t.Fatalf("Test failed. expected a put statement. got <%T>", program.Statements[0])
+	}
+
+	if stmt.NodeIdentifier.Value != "add" {
+		t.Fatalf("Test failed. expected statement identifier = 'add'. got <%s>", stmt.NodeIdentifier.Value)
+	}
+
+	box, ok := stmt.NodeExpression.(*ast.BoxExpression)
+
+	if !ok {
+		t.Fatalf("Test failed. expected statement expression type of 'box'. got <%T>", stmt.NodeExpression)
+	}
+
+	if box.String() != "(a,b,){return(a+b)}" {
+		t.Fatalf("Test failed. Box statement isn't valid. Expected (a,b,){return(a+b)}. Got <%s>", box.String())
+	}
+}
+
 func testIntegerLiterals(t *testing.T, tcVal int64, exp ast.Expression) bool {
 	intexp, ok := exp.(*ast.IntegerLiteral)
 
@@ -465,7 +500,7 @@ func testIntegerLiterals(t *testing.T, tcVal int64, exp ast.Expression) bool {
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {
-	errs := p.getErrors()
+	errs := p.GetErrors()
 	if len(errs) > 0 {
 		for _, err := range errs {
 			t.Error(err)

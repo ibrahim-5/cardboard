@@ -94,7 +94,7 @@ type ExpressionStatement struct {
 
 func (es *ExpressionStatement) statementNode()       {}
 func (es *ExpressionStatement) TokenLiteral() string { return es.NodeToken.TokenLiteral }
-func (es *ExpressionStatement) String() string       { return es.NodeToken.TokenLiteral }
+func (es *ExpressionStatement) String() string       { return es.Expression.String() }
 
 // Integers are just expressions as well
 
@@ -176,7 +176,7 @@ func (box *BoxExpression) String() string {
 	var out bytes.Buffer
 	out.WriteString("(")
 	for _, arg := range box.ParameterList {
-		out.WriteString(arg.String())
+		out.WriteString(arg.String() + ",")
 	}
 	out.WriteString(")")
 
