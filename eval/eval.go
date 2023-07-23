@@ -9,9 +9,11 @@ var NULL = &object.Null{}
 
 func Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
+	// Statements
 	case *ast.Program:
 		return evalStatements(node.Statements)
-
+	case *ast.UnboxStatement:
+		return evalUnboxStatement(node)
 	// Expressions
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
@@ -31,6 +33,10 @@ func evalStatements(stmts []ast.Statement) object.Object {
 	var result object.Object
 	for _, statement := range stmts {
 		result = Eval(statement)
+
+		if result.Type() == object.UNBOX_OBJ {
+			return result.(*object.Unbox).Value
+		}
 	}
 	return result
 }
@@ -71,4 +77,9 @@ func evalInfixExpression(operator string, left object.Object, right object.Objec
 	}
 
 	return NULL
+}
+
+func evalUnboxStatement(expr *ast.UnboxStatement) object.Object {
+	val := Eval(expr.NodeExpression)
+	return &object.Unbox{Value: val}
 }

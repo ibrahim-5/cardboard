@@ -132,6 +132,7 @@ func (p *Parser) parseUnboxStatement() *ast.UnboxStatement {
 
 	if !p.expectPeek(token.SCOLON) {
 		p.addError("error. expected semi colon at the end of unbox statement.")
+		return nil
 	}
 
 	return unboxStmt

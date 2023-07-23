@@ -15,7 +15,7 @@ func TestEvalIntegerExpression(t *testing.T) {
 		{"5", 5},
 		{"10", 10}}
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated := testEval(tt.input, t)
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
@@ -33,15 +33,31 @@ func TestEvalComplexIntegerExpression(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		evaluated := testEval(tt.input)
+		evaluated := testEval(tt.input, t)
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
 
-func testEval(input string) object.Object {
+func TestEvalUnboxStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"unbox 10 + 2; 100;", 12},
+		{"5 + (5 - 10); unbox (90 + 10); -15 - 100;", 100},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input, t)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
+
+func testEval(input string, t *testing.T) object.Object {
 	l := lexer.CreateLexer(input)
 	p := parser.CreateParser(l)
 	program := p.ParseCardBoard()
+	checkParserErrors(t, p)
 	return Eval(program)
 }
 
@@ -57,4 +73,14 @@ func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
 		return false
 	}
 	return true
+}
+
+func checkParserErrors(t *testing.T, p *parser.Parser) {
+	errs := p.GetErrors()
+	if len(errs) > 0 {
+		for _, err := range errs {
+			t.Error(err)
+		}
+		t.FailNow()
+	}
 }
