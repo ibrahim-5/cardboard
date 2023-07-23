@@ -48,6 +48,7 @@ func CreateParser(l *lexer.Lexer) *Parser {
 	p.setPrefixFunction(token.IDENTIFIER, p.parseIdentifier)
 	p.setPrefixFunction(token.INT, p.parseIntegerLiteral)
 	p.setPrefixFunction(token.SUB, p.parsePrefixExpression)
+	p.setPrefixFunction(token.ADD, p.parsePrefixExpression)
 	p.setPrefixFunction(token.LPAREN, p.parseGroupedExpression)
 	p.setPrefixFunction(token.BOX, p.parseBoxStatement)
 

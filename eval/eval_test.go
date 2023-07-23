@@ -19,6 +19,24 @@ func TestEvalIntegerExpression(t *testing.T) {
 		testIntegerObject(t, evaluated, tt.expected)
 	}
 }
+func TestEvalComplexIntegerExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"+5;", 5},
+		{"-5;", -5},
+		{"-50 + 100 + -50", 0},
+		{"20 - 5;", 15},
+		{"-15 - 100;", -115},
+		{"5 + (5 - 10);", 0},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
 
 func testEval(input string) object.Object {
 	l := lexer.CreateLexer(input)
