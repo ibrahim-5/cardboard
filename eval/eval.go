@@ -7,21 +7,26 @@ import (
 
 var NULL = &object.Null{}
 
-func Eval(node ast.Node) object.Object {
+func Eval(node ast.Node, env *object.Environment) object.Object {
 	switch node := node.(type) {
 	// Statements
 	case *ast.Program:
-		return evalStatements(node.Statements)
+		return evalStatements(node.Statements, env)
 	case *ast.UnboxStatement:
-		return evalUnboxStatement(node)
+		return evalUnboxStatement(node, env)
+	case *ast.PutStatement:
+		return evalPutStatement(node, env)
+
 	// Expressions
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression)
+		return Eval(node.Expression, env)
+	case *ast.Identifier:
+		return evalIdentifier(node, env)
 	case *ast.PrefixExpression:
-		return evalPrefixExpression(node)
+		return evalPrefixExpression(node, env)
 	case *ast.InfixExpression:
-		l := Eval(node.Left)
-		r := Eval(node.Right)
+		l := Eval(node.Left, env)
+		r := Eval(node.Right, env)
 		return evalInfixExpression(node.Operator, l, r)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
@@ -29,10 +34,10 @@ func Eval(node ast.Node) object.Object {
 	return NULL
 }
 
-func evalStatements(stmts []ast.Statement) object.Object {
+func evalStatements(stmts []ast.Statement, env *object.Environment) object.Object {
 	var result object.Object
 	for _, statement := range stmts {
-		result = Eval(statement)
+		result = Eval(statement, env)
 
 		if result.Type() == object.UNBOX_OBJ {
 			return result.(*object.Unbox).Value
@@ -41,8 +46,8 @@ func evalStatements(stmts []ast.Statement) object.Object {
 	return result
 }
 
-func evalPrefixExpression(expr *ast.PrefixExpression) object.Object {
-	operand := Eval(expr.Right)
+func evalPrefixExpression(expr *ast.PrefixExpression, env *object.Environment) object.Object {
+	operand := Eval(expr.Right, env)
 
 	if operand.Type() != object.INTEGER_OBJ {
 		return NULL
@@ -79,7 +84,20 @@ func evalInfixExpression(operator string, left object.Object, right object.Objec
 	return NULL
 }
 
-func evalUnboxStatement(expr *ast.UnboxStatement) object.Object {
-	val := Eval(expr.NodeExpression)
+func evalUnboxStatement(unbox *ast.UnboxStatement, env *object.Environment) object.Object {
+	val := Eval(unbox.NodeExpression, env)
 	return &object.Unbox{Value: val}
+}
+
+func evalPutStatement(stmt *ast.PutStatement, env *object.Environment) object.Object {
+	val := Eval(stmt.NodeExpression, env)
+	return env.Set(stmt.NodeIdentifier.Value, val)
+}
+
+func evalIdentifier(ident *ast.Identifier, env *object.Environment) object.Object {
+	obj, ok := env.Get(ident.Value)
+	if !ok {
+		return NULL
+	}
+	return obj
 }

@@ -53,12 +53,30 @@ func TestEvalUnboxStatements(t *testing.T) {
 	}
 }
 
+func TestEvalPutStatements(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"put a = 5; a;", 5},
+		{"put a = 5 + 5; a;", 10},
+		{"put a = 5; put b = a; b;", 5},
+		{"put a = 5; put b = a; put c = a + b + 5; c;", 15},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input, t)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
+
 func testEval(input string, t *testing.T) object.Object {
 	l := lexer.CreateLexer(input)
 	p := parser.CreateParser(l)
 	program := p.ParseCardBoard()
 	checkParserErrors(t, p)
-	return Eval(program)
+	env := object.CreateEnvironment()
+	return Eval(program, env)
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {

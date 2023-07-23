@@ -2,6 +2,27 @@ package object
 
 import "strconv"
 
+// Environment
+type Environment struct {
+	store map[string]Object
+}
+
+func CreateEnvironment() *Environment {
+	m := make(map[string]Object)
+	return &Environment{store: m}
+}
+
+func (env *Environment) Get(key string) (Object, bool) {
+	obj, found := env.store[key]
+	return obj, found
+}
+
+func (env *Environment) Set(key string, val Object) Object {
+	env.store[key] = val
+	return val
+}
+
+// Objects
 type ObjectType string
 
 type Object interface {
