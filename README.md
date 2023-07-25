@@ -24,14 +24,28 @@ show(add(x, y));
 
 The syntax of cardboard is liable to change as I develop it, but the design focus for ``cardboard`` will always be simplicity and ease of use. 
 
+# How To Use Cardboard
+To use the cardboard, begin by cloning this repository.
+```
+git clone https://github.com/ibrahim-5/cardboard.git
+
+cd cardboard
+```
+Once at the base of the cloned repository, run the following command.
+```
+go run main.go
+```
+
+If you run into any issues, please feel free to open a new issue on this repository's page.
+
 # Development Plans
 Developing programming languages is an interest I wish to experiment with, and therefore ``cardboard`` will always be in development! 
 
 The following is a subset of the ideas I wish to implement in the language:
 
-- [ ] Variable Declarations
-- [ ] Arithmetic Operations
-- [ ] Function Declarations
+- [x] Variable Declarations
+- [x] Arithmetic Operations
+- [x] Function Declarations
 - [ ] Printing Functionality
 - [ ] Comments
 - [ ] Arrays
