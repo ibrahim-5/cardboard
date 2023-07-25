@@ -1,26 +1,11 @@
 package object
 
-import "strconv"
-
-// Environment
-type Environment struct {
-	store map[string]Object
-}
-
-func CreateEnvironment() *Environment {
-	m := make(map[string]Object)
-	return &Environment{store: m}
-}
-
-func (env *Environment) Get(key string) (Object, bool) {
-	obj, found := env.store[key]
-	return obj, found
-}
-
-func (env *Environment) Set(key string, val Object) Object {
-	env.store[key] = val
-	return val
-}
+import (
+	"bytes"
+	"cardboard/parser/ast"
+	"strconv"
+	"strings"
+)
 
 // Objects
 type ObjectType string
@@ -32,9 +17,10 @@ type Object interface {
 
 // Types
 const (
-	INTEGER_OBJ ObjectType = "INTEGER_OBJ"
-	UNBOX_OBJ   ObjectType = "UNBOX_OBJ"
-	NULL        ObjectType = "NULL"
+	INTEGER_OBJ  ObjectType = "INTEGER_OBJ"
+	UNBOX_OBJ    ObjectType = "UNBOX_OBJ"
+	NULL         ObjectType = "NULL"
+	FUNCTION_OBJ ObjectType = "FUNCTION_OBJ"
 )
 
 // Integer
@@ -58,3 +44,26 @@ type Unbox struct {
 
 func (un *Unbox) Type() ObjectType { return UNBOX_OBJ }
 func (un *Unbox) Inspect() string  { return un.Value.Inspect() }
+
+// Function (box)
+type Box struct {
+	Env           *Environment
+	ParameterList []*ast.Identifier
+	Body          *ast.BlockStatement
+}
+
+func (f *Box) Type() ObjectType { return FUNCTION_OBJ }
+func (f *Box) Inspect() string {
+	var out bytes.Buffer
+	params := []string{}
+	for _, p := range f.ParameterList {
+		params = append(params, p.String())
+	}
+	out.WriteString("box")
+	out.WriteString("(")
+	out.WriteString(strings.Join(params, ", "))
+	out.WriteString(") {\n")
+	out.WriteString(f.Body.String())
+	out.WriteString("\n}")
+	return out.String()
+}

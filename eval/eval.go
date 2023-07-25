@@ -16,8 +16,15 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalUnboxStatement(node, env)
 	case *ast.PutStatement:
 		return evalPutStatement(node, env)
-
+	case *ast.BlockStatement:
+		return evalBlockStatement(node, env)
 	// Expressions
+	case *ast.BoxExpression:
+		return &object.Box{Env: env,
+			ParameterList: node.ParameterList,
+			Body:          node.Body}
+	case *ast.CallExpression:
+		return evalCallExpression(node, env)
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression, env)
 	case *ast.Identifier:
@@ -100,4 +107,52 @@ func evalIdentifier(ident *ast.Identifier, env *object.Environment) object.Objec
 		return NULL
 	}
 	return obj
+}
+
+func evalBlockStatement(block *ast.BlockStatement, env *object.Environment) object.Object {
+	var result object.Object
+	for _, statement := range block.Statements {
+		result = Eval(statement, env)
+		if result != nil {
+			rt := result.Type()
+			if rt == object.UNBOX_OBJ {
+				return result
+			}
+		}
+	}
+	return result
+}
+
+func evalCallExpression(call *ast.CallExpression, env *object.Environment) object.Object {
+	var arguments []object.Object
+
+	box := Eval(call.Function, env)
+
+	for _, arg := range call.Arguments {
+		evaluated := Eval(arg, env)
+		arguments = append(arguments, evaluated)
+	}
+
+	return applyBoxFunction(box, arguments)
+}
+
+func applyBoxFunction(box object.Object, args []object.Object) object.Object {
+	fn, ok := box.(*object.Box)
+
+	if !ok {
+		return NULL
+	}
+
+	fn.Env = object.CreateEnclosedEnvironment(fn.Env)
+
+	for paramIdx, param := range fn.ParameterList {
+		fn.Env.Set(param.Value, args[paramIdx])
+	}
+
+	evaluated := Eval(fn.Body, fn.Env)
+
+	if unbox, ok := evaluated.(*object.Unbox); ok {
+		return unbox.Value
+	}
+	return evaluated
 }

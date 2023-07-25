@@ -70,6 +70,68 @@ func TestEvalPutStatements(t *testing.T) {
 	}
 }
 
+func TestFunctionExprEval(t *testing.T) {
+	test := "box(a,b){return a + b;}"
+	evaluated := testEval(test, t)
+	box, ok := evaluated.(*object.Box)
+
+	if !ok {
+		t.Fatalf("Test failed. Expected return type of <Box>. Got <%s>", evaluated.Type())
+	}
+
+	if len(box.ParameterList) != 2 {
+		t.Fatalf("Test failed. Expected parameter length of 2. Got length of <%d>", len(box.ParameterList))
+	}
+
+	if box.ParameterList[0].String() != "a" || box.ParameterList[1].String() != "b" {
+		t.Fatalf("Test failed. Expected parameter list of (a, b). Got <(%s, %s)>",
+			box.ParameterList[0].String(),
+			box.ParameterList[1].String())
+	}
+
+	if box.Body.String() != "{return(a+b)}" {
+		t.Fatalf("Test failed. Expected function body of '{return(a+b)}'. Got <%s>", box.Body.String())
+	}
+
+}
+
+func TestFullFunctionEval(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"put identity = box(x) { x; }; identity(5);", 5},
+		{"put identity = box(x) { unbox x; }; identity(5);", 5},
+		{"put double = box(x) { x + x; }; double(5);", 10},
+		{"put add = box(x, y) { x + y; }; add(5, 5);", 10},
+		{"put add = box(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
+		{"box(x) { x; }(5)", 5},
+	}
+	for _, tt := range tests {
+		testIntegerObject(t, testEval(tt.input, t), tt.expected)
+	}
+}
+func TestClosures(t *testing.T) {
+	input := `
+   put newAdder = box(x) {
+     box(y) { x + y };
+};
+   put addTwo = newAdder(2);
+   addTwo(2);`
+
+	testIntegerObject(t, testEval(input, t), 4)
+}
+
+func TestFunctionsAsArguments(t *testing.T) {
+	input := `
+	put add = box(a, b) { a + b };
+	put sub = box(a, b) { a - b };
+	put applyFunc = box(a, b, func) { func(a, b) };
+	applyFunc(2, 2, add);
+	`
+	testIntegerObject(t, testEval(input, t), 4)
+}
+
 func testEval(input string, t *testing.T) object.Object {
 	l := lexer.CreateLexer(input)
 	p := parser.CreateParser(l)
