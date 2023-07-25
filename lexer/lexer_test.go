@@ -92,3 +92,34 @@ func TestLexer2(t *testing.T) {
 		}
 	}
 }
+
+func TestLexer3(t *testing.T) {
+	input := `/]?`
+	expectedResult := []struct {
+		expectedType    token.TokenType
+		expectedLiteral string
+	}{
+		{expectedType: token.UNKNOWN, expectedLiteral: "/"},
+		{expectedType: token.UNKNOWN, expectedLiteral: "]"},
+		{expectedType: token.UNKNOWN, expectedLiteral: "?"},
+		{expectedType: token.EOF, expectedLiteral: ""},
+	}
+
+	l := CreateLexer(input)
+
+	for _, testToken := range expectedResult {
+		lexerToken := l.NextToken()
+
+		// Checking Type
+
+		if (lexerToken.TokenType != testToken.expectedType) ||
+			(lexerToken.TokenLiteral != testToken.expectedLiteral) {
+			t.Fatalf("Test Failed! Expected Token: <Type: %s, Literal: %s> but Got Token: <Type: %s, Literal: %s>\n",
+				testToken.expectedType,
+				testToken.expectedLiteral,
+				lexerToken.TokenType,
+				lexerToken.TokenLiteral)
+		}
+	}
+
+}

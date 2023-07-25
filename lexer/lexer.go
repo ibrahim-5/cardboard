@@ -1,6 +1,9 @@
 package lexer
 
-import "cardboard/lexer/token"
+import (
+	"cardboard/lexer/token"
+	"unicode"
+)
 
 type Lexer struct {
 	data    string
@@ -49,14 +52,18 @@ func (lex *Lexer) NextToken() token.Token {
 		curToken = token.NewToken(token.EOF, "")
 
 	default:
+		// isInteger, isLetter return their tokens because
+		// theres no need to move the lexer char pointer forwards!
 		if isInteger(lex.char) {
 			readInteger := lex.readInteger()
-			curToken = token.NewToken(token.INT, readInteger)
+			return token.NewToken(token.INT, readInteger)
 		} else if isLetter(lex.char) {
 			readIdentifier := lex.readIdentifier()
-			curToken = token.NewToken(token.GetIdentifierType(readIdentifier), readIdentifier)
+			return token.NewToken(token.GetIdentifierType(readIdentifier), readIdentifier)
+		} else {
+			// Unknown token
+			curToken = token.NewToken(token.UNKNOWN, string(lex.char))
 		}
-		return curToken
 	}
 	lex.readChar()
 	return curToken
@@ -89,21 +96,15 @@ func (lex *Lexer) readInteger() string {
 }
 
 func isLetter(ch byte) bool {
-	if (65 <= ch && ch <= 90) || (97 <= ch && ch <= 122) {
-		return true
-	}
-	return false
+	return unicode.IsLetter(rune(ch))
 }
 
 func isInteger(ch byte) bool {
-	if 48 <= ch && ch <= 57 {
-		return true
-	}
-	return false
+	return unicode.IsDigit(rune(ch))
 }
 
 func (lex *Lexer) eatWhiteSpace() {
-	for lex.char == '\n' || lex.char == ' ' || lex.char == '\t' {
+	for unicode.IsSpace(rune(lex.char)) {
 		lex.readChar()
 	}
 }
