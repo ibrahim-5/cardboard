@@ -209,3 +209,17 @@ func (ce *CallExpression) String() string {
 	out.WriteString(ce.Function.String())
 	return out.String()
 }
+
+// Show Statement
+type ShowStatement struct {
+	NodeToken  token.Token
+	Expression Expression
+}
+
+func (ss *ShowStatement) statementNode()       {}
+func (ss *ShowStatement) TokenLiteral() string { return ss.NodeToken.TokenLiteral }
+func (ss *ShowStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString("show(" + ss.Expression.String() + ")")
+	return out.String()
+}

@@ -20,7 +20,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return evalPutStatement(node, env)
 	case *ast.BlockStatement:
 		return evalBlockStatement(node, env)
-
+	case *ast.ShowStatement:
+		return evalShowStatement(node, env)
 	// Expressions
 	case *ast.BoxExpression:
 		return evalBoxExpression(node, env)
@@ -194,6 +195,16 @@ func applyBoxFunction(box object.Object, args []object.Object) object.Object {
 	}
 
 	return evaluated
+}
+
+func evalShowStatement(stmt *ast.ShowStatement, env *object.Environment) object.Object {
+	evaluated := Eval(stmt.Expression, env)
+
+	if isError(evaluated) {
+		return evaluated
+	}
+
+	return &object.Show{Message: evaluated.Inspect()}
 }
 
 func throwError(format string, a ...interface{}) *object.Error {

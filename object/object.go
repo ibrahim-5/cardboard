@@ -22,6 +22,7 @@ const (
 	NULL      ObjectType = "NULL"
 	FUNCTION  ObjectType = "FUNCTION"
 	ERROR_OBJ ObjectType = "ERROR"
+	SHOW_OBJ  ObjectType = "SHOW"
 )
 
 // Integer
@@ -74,3 +75,11 @@ type Error struct {
 
 func (err *Error) Type() ObjectType { return ERROR_OBJ }
 func (err *Error) Inspect() string  { return err.Message }
+
+// Show
+type Show struct {
+	Message string
+}
+
+func (sh *Show) Type() ObjectType { return SHOW_OBJ }
+func (sh *Show) Inspect() string  { return sh.Message }

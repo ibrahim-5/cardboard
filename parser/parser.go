@@ -88,6 +88,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		return p.parsePutStatement()
 	case token.UNBOX:
 		return p.parseUnboxStatement()
+	case token.SHOW:
+		return p.parseShowStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -142,6 +144,28 @@ func (p *Parser) parseUnboxStatement() *ast.UnboxStatement {
 	return unboxStmt
 }
 
+func (p *Parser) parseShowStatement() *ast.ShowStatement {
+	showStmt := &ast.ShowStatement{NodeToken: p.curToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		p.addError("Error. Expected <(> after 'Show'.")
+		return nil
+	}
+
+	showStmt.Expression = p.parseExpression(LOWEST)
+
+	if !p.curTokenIs(token.RPAREN) {
+		p.addError("Error. Expected closing <)>.")
+		return nil
+	}
+
+	if !p.expectPeek(token.SCOLON) {
+		p.addError("Error. Expected <;> at the end of Show statement.")
+		return nil
+	}
+
+	return showStmt
+}
 func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 	expStmt := &ast.ExpressionStatement{NodeToken: p.curToken}
 	expStmt.Expression = p.parseExpression(LOWEST)

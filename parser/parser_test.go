@@ -477,6 +477,41 @@ func TestPutBoxStatementParsing(t *testing.T) {
 	}
 }
 
+func TestShowStatementParsing(t *testing.T) {
+	input := `
+		show(5 + 5);
+	`
+
+	parser := CreateParser(lexer.CreateLexer(input))
+	program := parser.ParseCardBoard()
+	checkParserErrors(t, parser)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("Test failed. Expected program length of 1. Got length of <%d>", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ShowStatement)
+
+	if !ok {
+		t.Fatalf("Test failed. Expected Show Statement. Got statement of Type <%T>", program.Statements[0])
+	}
+
+	expr, ok := stmt.Expression.(*ast.InfixExpression)
+
+	if !ok {
+		t.Fatalf("Test Failed! Expression is not *ast.InfixExpression. Got <%T>", stmt)
+
+	}
+
+	if expr.Operator != "+" {
+		t.Fatalf("Test Failed! Operator not equal to %s . Got <%s>", "+", expr.Operator)
+	}
+
+	if !testIntegerLiterals(t, 5, expr.Left) || !testIntegerLiterals(t, 5, expr.Right) {
+		return
+	}
+}
+
 func testIntegerLiterals(t *testing.T, tcVal int64, exp ast.Expression) bool {
 	intexp, ok := exp.(*ast.IntegerLiteral)
 

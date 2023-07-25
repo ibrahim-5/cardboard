@@ -39,7 +39,9 @@ func StartREPL() {
 		}
 
 		evaluatedProgram := eval.Eval(program, env)
-		fmt.Println(evaluatedProgram.Inspect())
+		if evaluatedProgram.Type() == object.SHOW_OBJ || evaluatedProgram.Type() == object.ERROR_OBJ {
+			fmt.Println("> " + evaluatedProgram.Inspect())
+		}
 	}
 }
 
