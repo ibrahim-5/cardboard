@@ -48,6 +48,7 @@ func CreateParser(l *lexer.Lexer) *Parser {
 	p.setPrefixFunction(token.IDENTIFIER, p.parseIdentifier)
 	p.setPrefixFunction(token.INT, p.parseIntegerLiteral)
 	p.setPrefixFunction(token.SUB, p.parsePrefixExpression)
+	p.setPrefixFunction(token.ADD, p.parsePrefixExpression)
 	p.setPrefixFunction(token.LPAREN, p.parseGroupedExpression)
 	p.setPrefixFunction(token.BOX, p.parseBoxStatement)
 
@@ -61,15 +62,19 @@ func CreateParser(l *lexer.Lexer) *Parser {
 }
 
 // Parses Cardboard Program
-func (p *Parser) ParseCardBoard() ast.Program {
+func (p *Parser) ParseCardBoard() *ast.Program {
 	program := ast.Program{}
 
 	for !p.curTokenIs(token.EOF) {
+		if p.curTokenIs(token.UNKNOWN) {
+			p.addError(fmt.Sprintf("Unknown Token: %s", p.curToken.TokenLiteral))
+			return &ast.Program{}
+		}
 		stmt := p.parseStatement()
 		program.Statements = append(program.Statements, stmt)
 		p.nextToken()
 	}
-	return program
+	return &program
 }
 
 func (p *Parser) nextToken() {
@@ -113,7 +118,7 @@ func (p *Parser) parsePutStatement() *ast.PutStatement {
 
 	// At this point peek token should be semi colon!
 	for !p.expectPeek(token.SCOLON) {
-		p.addError("expected ; at the end of the box statement")
+		p.addError("Error. Expected <;> at the end of the box statement.")
 		return nil
 	}
 
@@ -130,7 +135,8 @@ func (p *Parser) parseUnboxStatement() *ast.UnboxStatement {
 	unboxStmt.NodeExpression = p.parseExpression(LOWEST)
 
 	if !p.expectPeek(token.SCOLON) {
-		p.addError("error. expected semi colon at the end of unbox statement.")
+		p.addError("Error. Expected <;> at the end of UNBOX statement.")
+		return nil
 	}
 
 	return unboxStmt
@@ -150,7 +156,7 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefix := p.prefixFuncs[p.curToken.TokenType]
 	if prefix == nil {
-		p.errors = append(p.errors, fmt.Sprintf("Couldn't find prefix function for %s", p.curToken.TokenLiteral))
+		p.errors = append(p.errors, fmt.Sprintf("Unknown character: <%s>", p.curToken.TokenLiteral))
 		return nil
 	}
 	leftExp := prefix()
@@ -177,7 +183,7 @@ func (p *Parser) parseIdentifier() ast.Expression {
 func (p *Parser) parseIntegerLiteral() ast.Expression {
 	val, err := strconv.ParseInt(p.curToken.TokenLiteral, 10, 0)
 	if err != nil {
-		error := fmt.Sprintf("Integer Parse Error. Couldn't Parse Integer From String = %s", p.curToken.TokenLiteral)
+		error := fmt.Sprintf("Error. Couldn't Parse Integer From String = <%s>", p.curToken.TokenLiteral)
 		p.errors = append(p.errors, error)
 		return nil
 	}
@@ -214,7 +220,7 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 	expr := p.parseExpression(LOWEST)
 
 	if !p.expectPeek(token.RPAREN) {
-		err := fmt.Sprintf("error. expected ). found %s instead.", p.peekToken.TokenLiteral)
+		err := fmt.Sprintf("Error. Expected <)>. Found <%s> instead.", p.peekToken.TokenLiteral)
 		p.addError(err)
 		return nil
 	}
@@ -225,21 +231,21 @@ func (p *Parser) parseBoxStatement() ast.Expression {
 	box := &ast.BoxExpression{NodeToken: p.curToken}
 
 	if !p.expectPeek(token.LPAREN) {
-		p.addError(fmt.Sprintf("error. expected parameter list after function name. found %s", p.peekToken.TokenType))
+		p.addError(fmt.Sprintf("Error. Expected parameter list after function name. Found <%s>", p.peekToken.TokenType))
 		return nil
 	}
 
 	box.ParameterList = p.parseFunctionParameters()
 
 	if !p.expectPeek(token.LCURLY) {
-		p.addError("error. expected function block statement")
+		p.addError("Error. Expected function block statement after parameter list.")
 		return nil
 	}
 
 	box.Body = p.parseBlockStatement()
 
 	if !p.curTokenIs(token.RCURLY) {
-		p.addError(fmt.Sprintf("expected block closure! got %s", p.peekToken.TokenType))
+		p.addError(fmt.Sprintf("Error. Expected block statement closure! Got <%s>", p.peekToken.TokenType))
 		return nil
 	}
 
@@ -279,7 +285,7 @@ func (p *Parser) parseFunctionParameters() []*ast.Identifier {
 	}
 
 	if !p.expectPeek(token.RPAREN) {
-		p.addError("error. expected parameter list closure.")
+		p.addError(fmt.Sprintf("Error. Expected parameter list closure. Got <%s>", p.peekToken.TokenLiteral))
 		return nil
 	}
 
@@ -310,7 +316,7 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 	}
 
 	if !p.expectPeek(token.RPAREN) {
-		p.addError("error. no closure to call expression argument list")
+		p.addError(fmt.Sprintf("Error. No closure to call expression argument list. Got <%s>", p.peekToken.TokenLiteral))
 		return nil
 	}
 	return arguments
